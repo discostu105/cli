@@ -15,6 +15,7 @@ using Microsoft.DotNet.Tools.Compiler;
 using Microsoft.DotNet.Tools.Compiler.Csc;
 using Microsoft.DotNet.Tools.Compiler.Fsc;
 using Microsoft.DotNet.Tools.Compiler.Native;
+using Microsoft.DotNet.Tools.Compiler.Mcg;
 using Microsoft.DotNet.Tools.Help;
 using Microsoft.DotNet.Tools.New;
 using Microsoft.DotNet.Tools.Publish;
@@ -107,6 +108,7 @@ namespace Microsoft.DotNet.Cli
                 ["compile-fsc"] = CompileFscCommand.Run,
                 ["compile-native"] = CompileNativeCommand.Run,
                 ["help"] = HelpCommand.Run,
+                ["mcg"] = McgCommand.Run,
                 ["new"] = NewCommand.Run,
                 ["pack"] = PackCommand.Run,
                 ["projectmodel-server"] = ProjectModelServerCommand.Run,
@@ -135,11 +137,11 @@ namespace Microsoft.DotNet.Cli
         {
             HelpCommand.PrintVersionHeader();
 
-            var commitSha = GetCommitSha();
+            var commitSha = GetCommitSha() ?? "N/A";
             Reporter.Output.WriteLine();
             Reporter.Output.WriteLine("Product Information:");
             Reporter.Output.WriteLine($" Version:     {HelpCommand.ProductVersion}");
-            Reporter.Output.WriteLine($" Commit Sha:  {commitSha.Substring(0, 10)}");
+            Reporter.Output.WriteLine($" Commit Sha:  {commitSha}");
             Reporter.Output.WriteLine();
             var runtimeEnvironment = PlatformServices.Default.Runtime;
             Reporter.Output.WriteLine("Runtime Environment:");
@@ -166,7 +168,7 @@ namespace Microsoft.DotNet.Cli
             
             if (File.Exists(versionFile))
             {
-                return File.ReadLines(versionFile).FirstOrDefault();
+                return File.ReadLines(versionFile).FirstOrDefault()?.Substring(0, 10);
             }
             
             return null;
