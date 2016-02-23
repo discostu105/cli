@@ -129,6 +129,38 @@ namespace Microsoft.DotNet.Tools.Builder.Tests
         }
 
         [Fact]
+        public void MultipleFrameworks_ShouldHaveValidTargetFrameworkAttribute()
+        {
+            ShouldHaveValidAssemblyInfoAttribute("net20", "TargetFrameworkAttribute", true);
+            ShouldHaveValidAssemblyInfoAttribute("net35", "TargetFrameworkAttribute", true);
+            ShouldHaveValidAssemblyInfoAttribute("net40", "TargetFrameworkAttribute", false, ".NETFramework, Version = v4.0");
+            ShouldHaveValidAssemblyInfoAttribute("net461", "TargetFrameworkAttribute", false, ".NETFramework, Version = v4.0");
+            ShouldHaveValidAssemblyInfoAttribute("dnxcore50", "TargetFrameworkAttribute", false, "DNXCore,Version=v5.0");
+        }
+
+        private static void ShouldHaveValidAssemblyInfoAttribute(string framework, string attributeName, bool shouldBeNull, string attributeValue = null)
+        {
+            var testInstance = TestAssetsManager.CreateTestInstance("TestAppWithMultipleFrameworks")
+                                                .WithLockFiles();
+
+            var cmd = new BuildCommand(Path.Combine(testInstance.TestRoot, Project.FileName), framework: framework);
+            cmd.ExecuteWithCapturedOutput().Should().Pass();
+
+            var output = Path.Combine(testInstance.TestRoot, "bin", "Debug", framework, "TestAppWithMultipleFrameworks.dll");
+            var targetFramework = PeReaderUtils.GetAssemblyAttributeValue(output, "TargetFrameworkAttribute");
+
+            if (shouldBeNull)
+            {
+                targetFramework.Should().BeNull();
+            }
+            else
+            {
+                targetFramework.Should().NotBeNull();
+                targetFramework.Should().BeEquivalentTo(attributeValue);
+            }
+        }
+
+        [Fact]
         public void ResourceTest()
         {
             var testInstance = TestAssetsManager.CreateTestInstance("TestAppWithLibrary")
