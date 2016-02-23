@@ -129,20 +129,15 @@ namespace Microsoft.DotNet.Tools.Builder.Tests
             informationalVersion.Should().BeEquivalentTo("1.0.0-85");
         }
 
-        [Fact]
-        public void MultipleFrameworks_ShouldHaveValidTargetFrameworkAttribute()
+        [Theory]
+        [InlineData("net20", false)]
+        [InlineData("net40", true)]
+        [InlineData("net461", true)]
+        [InlineData("dnxcore50", true)]
+        public void MultipleFrameworks_ShouldHaveValidTargetFrameworkAttribute(string frameworkName, bool shouldHaveTargetFrameworkAttribute)
         {
-            ShouldHaveValidTargetFrameworkAttribute(FrameworkConstants.CommonFrameworks.Net2, "TargetFrameworkAttribute", true);
-            // ShouldHaveValidTargetFrameworkAttribute(FrameworkConstants.CommonFrameworks.Net35, "TargetFrameworkAttribute", true); isn't working, not sure why: The type or namespace name 'System' could not be found
+            NuGetFramework framework = NuGetFramework.ParseFolder(frameworkName);
 
-            ShouldHaveValidTargetFrameworkAttribute(FrameworkConstants.CommonFrameworks.Net4, "TargetFrameworkAttribute", false);
-            ShouldHaveValidTargetFrameworkAttribute(FrameworkConstants.CommonFrameworks.Net461, "TargetFrameworkAttribute", false);
-
-            ShouldHaveValidTargetFrameworkAttribute(FrameworkConstants.CommonFrameworks.DnxCore50, "TargetFrameworkAttribute", false);
-        }
-
-        private static void ShouldHaveValidTargetFrameworkAttribute(NuGetFramework framework, string attributeName, bool shouldBeNull)
-        {
             var testInstance = TestAssetsManager.CreateTestInstance("TestAppWithMultipleFrameworks")
                                                 .WithLockFiles();
 
@@ -152,17 +147,17 @@ namespace Microsoft.DotNet.Tools.Builder.Tests
             var output = Path.Combine(testInstance.TestRoot, "bin", "Debug", framework.GetShortFolderName(), "TestAppWithMultipleFrameworks.dll");
             var targetFramework = PeReaderUtils.GetAssemblyAttributeValue(output, "TargetFrameworkAttribute");
 
-            if (shouldBeNull)
-            {
-                targetFramework.Should().BeNull();
-            }
-            else
+            if (shouldHaveTargetFrameworkAttribute)
             {
                 targetFramework.Should().NotBeNull();
                 targetFramework.Should().BeEquivalentTo(framework.DotNetFrameworkName);
             }
+            else
+            {
+                targetFramework.Should().BeNull();
+            }
         }
-        
+
         [Fact]
         public void ResourceTest()
         {
