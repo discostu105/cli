@@ -159,7 +159,7 @@ namespace Microsoft.DotNet.Tools.Builder.Tests
             else
             {
                 targetFramework.Should().NotBeNull();
-                targetFramework.Should().BeEquivalentTo(framework.GetFrameworkString());
+                targetFramework.Should().BeEquivalentTo(framework.DotNetFrameworkName);
             }
         }
         
