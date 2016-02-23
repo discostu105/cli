@@ -138,13 +138,13 @@ namespace Microsoft.DotNet.Tools.Builder.Tests
         {
             var framework = NuGetFramework.Parse(frameworkName);
 
-            var testInstance = TestAssetsManager.CreateTestInstance("TestAppWithMultipleFrameworks")
+            var testInstance = TestAssetsManager.CreateTestInstance("TestLibraryWithMultipleFrameworks")
                                                 .WithLockFiles();
 
             var cmd = new BuildCommand(Path.Combine(testInstance.TestRoot, Project.FileName), framework: framework.GetShortFolderName());
             cmd.ExecuteWithCapturedOutput().Should().Pass();
 
-            var output = Path.Combine(testInstance.TestRoot, "bin", "Debug", framework.GetShortFolderName(), "TestAppWithMultipleFrameworks.dll");
+            var output = Path.Combine(testInstance.TestRoot, "bin", "Debug", framework.GetShortFolderName(), "TestLibraryWithMultipleFrameworks.dll");
             var targetFramework = PeReaderUtils.GetAssemblyAttributeValue(output, "TargetFrameworkAttribute");
 
             if (shouldHaveTargetFrameworkAttribute)
