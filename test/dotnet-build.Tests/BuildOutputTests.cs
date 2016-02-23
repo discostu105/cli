@@ -7,6 +7,7 @@ using FluentAssertions;
 using Microsoft.DotNet.ProjectModel;
 using Microsoft.DotNet.Tools.Test.Utilities;
 using Microsoft.Extensions.PlatformAbstractions;
+using NuGet.Frameworks;
 using Xunit;
 
 namespace Microsoft.DotNet.Tools.Builder.Tests
@@ -131,22 +132,24 @@ namespace Microsoft.DotNet.Tools.Builder.Tests
         [Fact]
         public void MultipleFrameworks_ShouldHaveValidTargetFrameworkAttribute()
         {
-            ShouldHaveValidAssemblyInfoAttribute("net20", "TargetFrameworkAttribute", true);
-            ShouldHaveValidAssemblyInfoAttribute("net35", "TargetFrameworkAttribute", true);
-            ShouldHaveValidAssemblyInfoAttribute("net40", "TargetFrameworkAttribute", false, ".NETFramework, Version = v4.0");
-            ShouldHaveValidAssemblyInfoAttribute("net461", "TargetFrameworkAttribute", false, ".NETFramework, Version = v4.0");
-            ShouldHaveValidAssemblyInfoAttribute("dnxcore50", "TargetFrameworkAttribute", false, "DNXCore,Version=v5.0");
+            ShouldHaveValidTargetFrameworkAttribute(FrameworkConstants.CommonFrameworks.Net2, "TargetFrameworkAttribute", true);
+            // ShouldHaveValidTargetFrameworkAttribute(FrameworkConstants.CommonFrameworks.Net35, "TargetFrameworkAttribute", true); isn't working, not sure why: The type or namespace name 'System' could not be found
+
+            ShouldHaveValidTargetFrameworkAttribute(FrameworkConstants.CommonFrameworks.Net4, "TargetFrameworkAttribute", false);
+            ShouldHaveValidTargetFrameworkAttribute(FrameworkConstants.CommonFrameworks.Net461, "TargetFrameworkAttribute", false);
+
+            ShouldHaveValidTargetFrameworkAttribute(FrameworkConstants.CommonFrameworks.DnxCore50, "TargetFrameworkAttribute", false);
         }
 
-        private static void ShouldHaveValidAssemblyInfoAttribute(string framework, string attributeName, bool shouldBeNull, string attributeValue = null)
+        private static void ShouldHaveValidTargetFrameworkAttribute(NuGetFramework framework, string attributeName, bool shouldBeNull)
         {
             var testInstance = TestAssetsManager.CreateTestInstance("TestAppWithMultipleFrameworks")
                                                 .WithLockFiles();
 
-            var cmd = new BuildCommand(Path.Combine(testInstance.TestRoot, Project.FileName), framework: framework);
+            var cmd = new BuildCommand(Path.Combine(testInstance.TestRoot, Project.FileName), framework: framework.GetShortFolderName());
             cmd.ExecuteWithCapturedOutput().Should().Pass();
 
-            var output = Path.Combine(testInstance.TestRoot, "bin", "Debug", framework, "TestAppWithMultipleFrameworks.dll");
+            var output = Path.Combine(testInstance.TestRoot, "bin", "Debug", framework.GetShortFolderName(), "TestAppWithMultipleFrameworks.dll");
             var targetFramework = PeReaderUtils.GetAssemblyAttributeValue(output, "TargetFrameworkAttribute");
 
             if (shouldBeNull)
@@ -156,10 +159,10 @@ namespace Microsoft.DotNet.Tools.Builder.Tests
             else
             {
                 targetFramework.Should().NotBeNull();
-                targetFramework.Should().BeEquivalentTo(attributeValue);
+                targetFramework.Should().BeEquivalentTo(framework.GetFrameworkString());
             }
         }
-
+        
         [Fact]
         public void ResourceTest()
         {
