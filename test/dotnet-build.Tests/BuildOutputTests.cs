@@ -136,7 +136,7 @@ namespace Microsoft.DotNet.Tools.Builder.Tests
         [InlineData("dnxcore50", true)]
         public void MultipleFrameworks_ShouldHaveValidTargetFrameworkAttribute(string frameworkName, bool shouldHaveTargetFrameworkAttribute)
         {
-            NuGetFramework framework = NuGetFramework.ParseFolder(frameworkName);
+            var framework = NuGetFramework.Parse(frameworkName);
 
             var testInstance = TestAssetsManager.CreateTestInstance("TestAppWithMultipleFrameworks")
                                                 .WithLockFiles();
